@@ -6,7 +6,8 @@ import { defaultWords } from "../constants/default-words";
 import { ThesaurusResultModelV2 } from "../models/thesaurus.model";
 
 export class UsernameGenerator {
-  private _name = "projects/853416854561/secrets/MW_THESAURUS_API/versions/1";
+  private _name =
+    "projects/853416854561/secrets/MW_THESAURUS_API/versions/latest";
 
   private _baseThesaurusUrl =
     "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
@@ -44,7 +45,7 @@ export class UsernameGenerator {
         responseData = await this.getWordsFromResponse(defaultWords);
       }
 
-      if (req.body.specials.length > 0) {
+      if (req.body.specials !== undefined && req.body.specials.length > 0) {
         usernames = this.generateUsernames(responseData, req.body.specials);
       } else {
         usernames = this.generateUsernames(responseData);
@@ -54,6 +55,7 @@ export class UsernameGenerator {
         .status(200)
         .send(usernames.filter((username) => username.length <= maxLength));
     } catch (error) {
+      throw error;
       console.log(`${error}: ${JSON.stringify(errors)}`);
       res.status(400).json(errors);
     }
@@ -115,7 +117,8 @@ export class UsernameGenerator {
       const responseIndexGenerator = () =>
         this.randomResponseDataIndex(i, responseData);
       const responseDefaultIndexGenerator = () => this.randomDefaultIndex();
-      const randomNumberGenerator = (arrLength?: number) => this.randomIndex(arrLength);
+      const randomNumberGenerator = (arrLength?: number) =>
+        this.randomIndex(arrLength);
 
       for (let i = 0; i < 15; i++) {
         usernames.push(
@@ -144,12 +147,13 @@ export class UsernameGenerator {
         responseData.length > responseIndexGenerator()
           ? this.capitalizeWord(responseData[responseIndexGenerator()])
           : this.capitalizeWord(defaultWords[responseDefaultIndexGenerator()]),
-        specialCharacters.length > 0
+        specialCharacters !== undefined && specialCharacters.length > 0
           ? specialCharacters[randomNumberGenerator(specialCharacters.length)]
           : "",
         responseIndexGenerator() % 2 === 0
           ? String(responseIndexGenerator())
           : "",
+        specialCharacters !== undefined &&
         specialCharacters.length > 0 &&
         responseDefaultIndexGenerator() % 24 === 0
           ? specialCharacters[randomNumberGenerator(specialCharacters.length)]
@@ -157,12 +161,15 @@ export class UsernameGenerator {
         responseData.length > responseIndexGenerator()
           ? this.capitalizeWord(responseData[responseIndexGenerator()])
           : this.capitalizeWord(defaultWords[responseDefaultIndexGenerator()]),
-        specialCharacters.length > 0 && responseIndexGenerator() % 2 === 0
+        specialCharacters !== undefined &&
+        specialCharacters.length > 0 &&
+        responseIndexGenerator() % 2 === 0
           ? specialCharacters[randomNumberGenerator(specialCharacters.length)]
           : "",
         responseDefaultIndexGenerator() % 7 === 0
           ? String(responseDefaultIndexGenerator())
           : "",
+        specialCharacters !== undefined &&
         specialCharacters.length > 0 &&
         responseDefaultIndexGenerator() % 7 === 0
           ? specialCharacters[randomNumberGenerator(specialCharacters.length)]
@@ -173,7 +180,9 @@ export class UsernameGenerator {
         randomNumberGenerator() % 31 === 0
           ? String(randomNumberGenerator())
           : "",
-        specialCharacters.length > 0 && randomNumberGenerator() % 31 === 0
+        specialCharacters !== undefined &&
+        specialCharacters.length > 0 &&
+        randomNumberGenerator() % 31 === 0
           ? specialCharacters[randomNumberGenerator(specialCharacters.length)]
           : "",
       ])
