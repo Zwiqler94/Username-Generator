@@ -1,4 +1,4 @@
-import { app as api } from "../../src/server";
+import {app as api} from "../../src/server";
 import * as functions from "firebase-functions";
 
 // // Start writing functions
@@ -9,4 +9,6 @@ import * as functions from "firebase-functions";
 //   response.send("Hello from Firebase!");
 // });
 
-export const usernameGeneratorAPI = functions.https.onRequest(api);
+export const usernameGeneratorAPI = functions
+    .runWith({enforceAppCheck: true})
+    .https.onRequest(api);

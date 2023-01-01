@@ -1,5 +1,6 @@
 import { app } from "./server";
 import { initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -11,11 +12,15 @@ const firebaseConfig = {
   projectId: "usernamegenerator",
   storageBucket: "usernamegenerator.appspot.com",
   messagingSenderId: "853416854561",
-  appId: "1:853416854561:web:ce4ad92e0ba115925e8f60"
+  appId: "1:853416854561:web:ce4ad92e0ba115925e8f60",
 };
 
 // Initialize Firebase
 const firebase = initializeApp(firebaseConfig);
+const firebaseAppCheck = initializeAppCheck(firebase, {
+  provider: new ReCaptchaV3Provider("6LdV5L8jAAAAAK1GaBQkmOq37fdxVQszw5x_iIV3"),
+  isTokenAutoRefreshEnabled: true,
+});
 
 // app.listen(3000, () => {
 //   console.log("running username generator");
