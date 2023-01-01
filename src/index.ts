@@ -17,10 +17,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const firebase = initializeApp(firebaseConfig);
-const firebaseAppCheck = initializeAppCheck(firebase, {
-  provider: new ReCaptchaV3Provider("6LdV5L8jAAAAAK1GaBQkmOq37fdxVQszw5x_iIV3"),
-  isTokenAutoRefreshEnabled: true,
-});
+
 
 // app.listen(3000, () => {
 //   console.log("running username generator");
