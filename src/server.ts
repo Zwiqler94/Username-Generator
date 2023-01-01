@@ -16,7 +16,11 @@ app.post(
   usernameGenerator.generateUsernameHandler
 );
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(404).send("404 Not Found");
+});
+
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
-  res.status(404).send("404 Not Found");
+  res.status(500).send("500 ERROR");
 });

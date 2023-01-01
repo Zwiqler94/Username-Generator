@@ -1,5 +1,5 @@
-import { app as api } from "../../src/server";
-import { NextFunction, Request, Response } from "express";
+import {app as api} from "../../src/server";
+import {NextFunction, Request, Response} from "express";
 import * as functions from "firebase-functions";
 import cors from "cors";
 
@@ -11,7 +11,7 @@ import cors from "cors";
 //   response.send("Hello from Firebase!");
 // });
 
-api.use(cors({ origin: true }));
+api.use(cors({origin: true}));
 api.use((req: Request, res: Response, next: NextFunction) => {
   res.set("Access-Control-Allow-Origin", "*");
   if (req.method === "OPTIONS") {
@@ -22,5 +22,5 @@ api.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 export const usernameGeneratorAPI = functions.https
-  // .runWith({enforceAppCheck: true})
-  .onRequest(api);
+// .runWith({enforceAppCheck: true})
+    .onRequest(api);
