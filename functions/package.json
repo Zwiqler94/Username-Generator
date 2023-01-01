@@ -17,12 +17,15 @@
   "dependencies": {
     "@google-cloud/secret-manager": "^4.2.0",
     "axios": "^1.2.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express-validator": "^6.14.2",
     "firebase-admin": "^11.4.1",
     "firebase-functions": "^4.1.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/eslint": "^8.4.10",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
     "eslint": "^8.31.0",
