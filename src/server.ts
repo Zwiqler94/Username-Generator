@@ -8,14 +8,14 @@ import { usernameReqValidator } from "./validators/username-req.validator";
 export const app = express();
 app.use(express.json());
 app.use(cors({ origin: true }));
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.set("Access-Control-Allow-Origin", "*");
-  if (req.method === "OPTIONS") {
-    res.set("Access-Control-Allow-Methods", "POST");
-    res.set("Access-Control-Allow-Headers", "Content-Type");
-    res.set("Access-Control-Max-Age", "3600");
-  }
-});
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   res.set("Access-Control-Allow-Origin", "*");
+//   if (req.method === "OPTIONS") {
+//     res.set("Access-Control-Allow-Methods", "POST");
+//     res.set("Access-Control-Allow-Headers", "Content-Type");
+//     res.set("Access-Control-Max-Age", "3600");
+//   }
+// });
 
 const usernameGenerator = new UsernameGenerator();
 

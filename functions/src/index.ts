@@ -1,4 +1,4 @@
-import { app as api } from "../../src/server";
+import {app as api} from "../../src/server";
 import * as functions from "firebase-functions";
 
 // // Start writing functions
