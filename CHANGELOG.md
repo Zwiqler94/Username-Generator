@@ -1,3 +1,7 @@
+## [1.1.1](https://github.com/Zwiqler94/Username-Generator/compare/v1.1.0...v1.1.1) (2023-03-04)
+
+
+
 # [](https://github.com/Zwiqler94/Username-Generator/compare/v1.1.0...v) (2023-03-04)
 
 
