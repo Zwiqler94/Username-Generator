@@ -1,3 +1,12 @@
+## [1.2.3](https://github.com/Zwiqler94/Username-Generator/compare/v1.2.1...v1.2.3) (2023-03-04)
+
+
+### Bug Fixes
+
+* **versioning:** redo version script in package.json ([5022c8b](https://github.com/Zwiqler94/Username-Generator/commit/5022c8bac817e76009a2ad105076ccea7a1ce964))
+
+
+
 ## <small>1.2.1 (2023-03-04)</small>
 
 * chore(release): 1.2.1 :tada: ([3c50642](https://github.com/Zwiqler94/Username-Generator/commit/3c50642))
