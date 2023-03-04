@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --watch 'index.ts' -e 'ts-node src/index.ts'",
     "test": "test",
-    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && git add CHANGELOG.md"
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s -n .changelog-config.ts && git add CHANGELOG.md"
   },
   "keywords": [
     "username",
