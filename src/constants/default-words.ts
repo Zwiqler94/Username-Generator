@@ -13,7 +13,7 @@ export const defaultWords = [
   "billionaire",
   "bleep",
   "bloop",
-   "blossoms",
+  "blossoms",
   "book",
   "boop",
   "boring",

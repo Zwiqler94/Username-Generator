@@ -4,6 +4,11 @@ import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { defaultWords } from "../constants/default-words";
 import { ThesaurusResultModelV2 } from "../models/thesaurus.model";
+import { readFileSync } from "fs";
+// import { parse } from "csv";
+import path from "path";
+// import * as readline from "readline";
+
 
 export class UsernameGenerator {
   private _name =
@@ -24,6 +29,15 @@ export class UsernameGenerator {
     return this._baseThesaurusUrl;
   }
 
+  async getBadWords() {
+    const data: string[] = readFileSync(
+     path.join(__dirname, "bad-words.csv"),
+      "utf-8"
+    ).split('\n').sort();
+    console.debug(data)
+    return data;
+  }
+
   generateUsernameHandler = async (req: Request, res: Response) => {
     const errors = validationResult(req);
     try {
@@ -38,9 +52,18 @@ export class UsernameGenerator {
       const maxLength = req.query.maxlength ? Number(req.query.maxlength) : 20;
       let responseData: string[] = [];
       if (req.body.words.length > 1) {
-        responseData = await this.getWordsFromResponse(
-          req.body.words as string[]
-        );
+        const words = req.body.words as string[];
+
+        const x = await this.getBadWords();
+
+        // console.debug({ x });
+
+       const processedWords = words.filter(
+          (word) => {
+            return !x.includes(word);
+          }
+       );
+        responseData = await this.getWordsFromResponse(processedWords);
       } else {
         responseData = await this.getWordsFromResponse(defaultWords);
       }
@@ -55,15 +78,17 @@ export class UsernameGenerator {
         .status(200)
         .send(usernames.filter((username) => username.length <= maxLength));
     } catch (error) {
-      throw error;
-      console.log(`${error}: ${JSON.stringify(errors)}`);
+      console.error(`${error}: ${JSON.stringify(errors)}`);
       res.status(400).json(errors);
+      throw error;
     }
   };
 
   private async getWordsFromResponse(words: string[]) {
     let responseData: string[] = [];
+    // words = (words as string[]).filter(word=>word.length <= 3);
     for (const word of words as string[]) {
+      console.debug({word})
       const mWThesaurus = `${this.baseThesaurusUrl}/${word}/?key=${this.apiKey}`;
       try {
         const synonyms = await axios.get(mWThesaurus);
@@ -73,7 +98,7 @@ export class UsernameGenerator {
           responseData = await this.getWordsFromResponse(synonyms.data);
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     }
     return responseData;
@@ -112,6 +137,7 @@ export class UsernameGenerator {
     responseData: string[],
     specialCharacters?: string[]
   ) {
+    console.log(responseData);
     let usernames: string[] = [];
     for (let i = 1; i < responseData.length; i++) {
       const responseIndexGenerator = () =>
