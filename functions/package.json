@@ -19,7 +19,7 @@
     "@types/node": "^20.11.13",
     "axios": "^1.6.7",
     "cors": "^2.8.5",
-    "csv": "^6.3.6",
+    "csv": "^6.3.8",
     "dotenv": "^16.4.1",
     "express-validator": "^7.0.1",
     "firebase-admin": "^11.11.1",
