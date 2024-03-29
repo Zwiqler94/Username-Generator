@@ -16,7 +16,7 @@
   "main": "lib/functions/src/index.js",
   "dependencies": {
     "@google-cloud/secret-manager": "^5.0.1",
-    "@types/node": "^20.11.13",
+    "@types/node": "^20.11.25",
     "axios": "^1.6.7",
     "cors": "^2.8.5",
     "csv": "^6.3.6",
