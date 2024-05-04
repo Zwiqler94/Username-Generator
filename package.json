@@ -15,18 +15,18 @@
   "author": "Jacob Zwickler",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/secret-manager": "^5.0.1",
-    "axios": "^1.6.7",
-    "conventional-changelog-cli": "^4.1.0",
+    "@google-cloud/secret-manager": "^5.5.0",
+    "axios": "^1.6.8",
+    "conventional-changelog-cli": "^5.0.0",
     "cors": "^2.8.5",
-    "csv": "^6.3.6",
-    "dotenv": "^16.4.1",
+    "csv": "^6.3.8",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-validator": "^7.0.1",
-    "firebase": "^10.10.0",
-    "nodemon": "^3.0.3",
+    "firebase": "^10.11.1",
+    "nodemon": "^3.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
