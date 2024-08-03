@@ -1,6 +1,6 @@
-import {defineSecret} from "firebase-functions/params";
-import {app as api} from "../../src/server";
-import {onRequest} from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
+import { app as api } from "../../src/server";
+import { onRequest } from "firebase-functions/v2/https";
 
 // // Start writing functions
 // // https://firebase.google.com/docs/functions/typescript
@@ -13,9 +13,9 @@ import {onRequest} from "firebase-functions/v2/https";
 const apiKey = defineSecret("MW_THESAURUS_API");
 
 export const usernameGeneratorAPIGen2 = onRequest(
-    {
-      concurrency: 10,
-      secrets: [apiKey],
-    },
-    api
+  {
+    concurrency: 10,
+    secrets: [apiKey],
+  },
+  api,
 );
