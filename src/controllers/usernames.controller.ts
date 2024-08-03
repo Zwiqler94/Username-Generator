@@ -54,13 +54,13 @@ export class UsernameGenerator {
       if (req.body.words.length > 1) {
         const words = req.body.words as string[];
 
-        const x = await this.getBadWords();
+        const badWords = await this.getBadWords();
 
         // console.debug({ x });
 
        const processedWords = words.filter(
           (word) => {
-            return !x.includes(word);
+            return !badWords.includes(word);
           }
        );
         responseData = await this.getWordsFromResponse(processedWords);
