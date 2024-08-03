@@ -18,7 +18,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebase = initializeApp(firebaseConfig);
 
-
 // app.listen(3000, () => {
 //   console.log("running username generator");
 // });

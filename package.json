@@ -1,6 +1,6 @@
 {
   "name": "username-generator",
-  "version": "1.2.4",
+  "version": "2.0.0",
   "description": "a tool to generate usernames",
   "main": "index.ts",
   "scripts": {
@@ -15,23 +15,23 @@
   "author": "Jacob Zwickler",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/secret-manager": "^5.5.0",
-    "axios": "^1.6.8",
+    "@google-cloud/secret-manager": "^5.6.0",
+    "axios": "^1.7.3",
     "conventional-changelog-cli": "^5.0.0",
     "cors": "^2.8.5",
-    "csv": "^6.3.8",
+    "csv": "^6.3.10",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "express-validator": "^7.0.1",
-    "firebase": "^10.11.1",
-    "nodemon": "^3.1.0",
+    "express-validator": "^7.1.0",
+    "firebase": "^10.12.5",
+    "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/nodemon": "^1.19.6",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   }
 }
