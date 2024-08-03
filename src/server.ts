@@ -14,7 +14,7 @@ const usernameGenerator = new UsernameGenerator();
 app.post(
   "/usernames",
   usernameReqValidator,
-  usernameGenerator.generateUsernameHandler
+  usernameGenerator.generateUsernameHandler,
 );
 
 app.use((req: Request, res: Response, next: NextFunction) => {
