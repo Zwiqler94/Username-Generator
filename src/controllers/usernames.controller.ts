@@ -9,7 +9,6 @@ import { readFileSync } from "fs";
 import path from "path";
 // import * as readline from "readline";
 
-
 export class UsernameGenerator {
   private _name =
     "projects/853416854561/secrets/MW_THESAURUS_API/versions/latest";
@@ -31,10 +30,12 @@ export class UsernameGenerator {
 
   async getBadWords() {
     const data: string[] = readFileSync(
-     path.join(__dirname, "bad-words.csv"),
-      "utf-8"
-    ).split('\n').sort();
-    console.debug(data)
+      path.join(__dirname, "bad-words.csv"),
+      "utf-8",
+    )
+      .split("\n")
+      .sort();
+    console.debug(data);
     return data;
   }
 
@@ -44,39 +45,38 @@ export class UsernameGenerator {
       if (!errors.isEmpty()) {
         throw new Error("Bad Request Body");
       }
+
       let usernames: string[] = [];
       const [apiKeyVersion] = await this.client.accessSecretVersion({
         name: this.name,
       });
+
       this.apiKey = apiKeyVersion.payload!.data!.toString();
+
       const maxLength = req.query.maxlength ? Number(req.query.maxlength) : 20;
       let responseData: string[] = [];
+
+      let processedWords: string[] = [];
+
       if (req.body.words.length > 1) {
         const words = req.body.words as string[];
 
         const badWords = await this.getBadWords();
 
-        // console.debug({ x });
-
-       const processedWords = words.filter(
-          (word) => {
-            return !badWords.includes(word);
-          }
-       );
-        responseData = await this.getWordsFromResponse(processedWords);
-      } else {
-        responseData = await this.getWordsFromResponse(defaultWords);
+        processedWords = words.filter((word) => {
+          return !badWords.includes(word);
+        });
       }
+      responseData = processedWords
+        ? await this.getWordsFromResponse(processedWords)
+        : await this.getWordsFromResponse(defaultWords);
 
-      if (req.body.specials !== undefined && req.body.specials.length > 0) {
-        usernames = this.generateUsernames(responseData, req.body.specials);
-      } else {
-        usernames = this.generateUsernames(responseData);
-      }
+      usernames = this.generateUsernames(responseData, req.body.specials);
 
       res
         .status(200)
         .send(usernames.filter((username) => username.length <= maxLength));
+      
     } catch (error) {
       console.error(`${error}: ${JSON.stringify(errors)}`);
       res.status(400).json(errors);
@@ -85,10 +85,11 @@ export class UsernameGenerator {
   };
 
   private async getWordsFromResponse(words: string[]) {
+    
     let responseData: string[] = [];
-    // words = (words as string[]).filter(word=>word.length <= 3);
+
     for (const word of words as string[]) {
-      console.debug({word})
+
       const mWThesaurus = `${this.baseThesaurusUrl}/${word}/?key=${this.apiKey}`;
       try {
         const synonyms = await axios.get(mWThesaurus);
@@ -110,7 +111,7 @@ export class UsernameGenerator {
 
   isThesaurusResultModelV2Array = (data: any) => {
     return (data as ThesaurusResultModelV2[]).every(
-      (entry: ThesaurusResultModelV2) => entry.meta !== undefined
+      (entry: ThesaurusResultModelV2) => entry.meta !== undefined,
     );
   };
 
@@ -125,7 +126,7 @@ export class UsernameGenerator {
       if (this.isThesaurusResultModelV2(entry)) {
         resultsInFunction = resultsInFunction.concat(entry.meta.stems);
         resultsInFunction = resultsInFunction.concat(
-          (entry.meta.syns as string[][]).flat(3)
+          (entry.meta.syns as string[][]).flat(3),
         );
       }
     }
@@ -135,7 +136,7 @@ export class UsernameGenerator {
 
   private generateUsernames(
     responseData: string[],
-    specialCharacters?: string[]
+    specialCharacters?: string[],
   ) {
     console.log(responseData);
     let usernames: string[] = [];
@@ -153,8 +154,8 @@ export class UsernameGenerator {
             responseIndexGenerator,
             responseDefaultIndexGenerator,
             randomNumberGenerator,
-            specialCharacters!
-          ).join("")
+            specialCharacters!,
+          ).join(""),
         );
       }
     }
@@ -166,7 +167,7 @@ export class UsernameGenerator {
     responseIndexGenerator: () => number,
     responseDefaultIndexGenerator: () => number,
     randomNumberGenerator: (arrLength?: number) => number,
-    specialCharacters: string[]
+    specialCharacters: string[],
   ): string[] {
     return Array.from(
       new Set([
@@ -211,7 +212,7 @@ export class UsernameGenerator {
         randomNumberGenerator() % 31 === 0
           ? specialCharacters[randomNumberGenerator(specialCharacters.length)]
           : "",
-      ])
+      ]),
     );
   }
 
@@ -239,7 +240,7 @@ export class UsernameGenerator {
           return fragmentResult;
         } else {
           return this.capitalizeWord(
-            defaultWords[Math.floor(Math.random() * defaultWords.length)]
+            defaultWords[Math.floor(Math.random() * defaultWords.length)],
           );
         }
       });
