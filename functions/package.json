@@ -29,7 +29,7 @@
     "dotenv": "^16.4.5",
     "express-validator": "^7.1.0",
     "firebase-admin": "^12.3.0",
-    "firebase-functions": "^5.0.1"
+    "firebase-functions": "^6.1.0"
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
