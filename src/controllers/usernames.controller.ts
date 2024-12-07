@@ -35,7 +35,7 @@ export class UsernameGenerator {
     )
       .split("\n")
       .sort();
-    console.debug(data);
+    // console.debug(data);
     return data;
   }
 
@@ -90,7 +90,9 @@ export class UsernameGenerator {
 
     for (const word of words as string[]) {
 
-      const mWThesaurus = `${this.baseThesaurusUrl}/${word}/?key=${this.apiKey}`;
+      const formattedWord = word.replace(/([^0-9a-zA-Z]+)/g, "");
+
+      const mWThesaurus = `${this.baseThesaurusUrl}/${formattedWord}/?key=${this.apiKey}`;
       try {
         const synonyms = await axios.get(mWThesaurus);
         if (this.isThesaurusResultModelV2Array(synonyms.data)) {
