@@ -10,7 +10,9 @@
     "target": "ES2022",
     "esModuleInterop": true,
     "removeComments": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "types": ["node"],
+    "skipLibCheck": true
   },
   "compileOnSave": true
 }
