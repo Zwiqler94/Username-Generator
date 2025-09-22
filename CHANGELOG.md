@@ -1,3 +1,5 @@
+# Changelog
+
 ## [2.0.1](https://github.com/Zwiqler94/Username-Generator/compare/v2.0.0...v2.0.1) (2025-09-02)
 
 

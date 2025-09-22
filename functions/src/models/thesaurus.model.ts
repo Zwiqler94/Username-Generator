@@ -14,8 +14,8 @@ export interface ThesaurusResultModelV2 {
   hwi: {
     hw: string;
   };
-  vrs: any;
+  vrs: unknown;
   fl: string;
-  def: any;
+  def: unknown;
   shortdef: string[];
 }

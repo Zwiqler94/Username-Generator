@@ -1,42 +1,77 @@
-import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 import axios from "axios";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { defaultWords } from "../constants/default-words";
 import { ThesaurusResultModelV2 } from "../models/thesaurus.model";
-import { readFileSync } from "fs";
-// import { parse } from "csv";
-import path from "path";
-// import * as readline from "readline";
+import { badWords } from "../constants/bad-words";
+import { apiKey } from "..";
+
+let cachedThesaurusKey: string | null = null;
+
+async function resolveThesaurusKey(): Promise<string> {
+  if (cachedThesaurusKey) return cachedThesaurusKey;
+  // Try runtime secret (defineSecret)
+  try {
+    const val = apiKey.value();
+    if (val) {
+      cachedThesaurusKey = String(val);
+      return cachedThesaurusKey;
+    }
+  } catch {
+    // ignore and fall back to env
+  }
+
+  // Fallback to environment variable for local development
+  if (process.env.MW_THESAURUS_API) {
+    cachedThesaurusKey = process.env.MW_THESAURUS_API;
+    return cachedThesaurusKey;
+  }
+
+  throw new Error("MW_THESAURUS_API not available (set secret or env var)");
+}
+
+// Simple in-memory cache for thesaurus responses with TTL and max size.
+type CacheEntry = { value: unknown; expiresAt: number };
+const THESAURUS_CACHE_MAX = 1000;
+const THESAURUS_CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+const thesaurusCache = new Map<string, CacheEntry>();
+
+function getFromThesaurusCache(key: string): unknown | null {
+  const entry = thesaurusCache.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt < Date.now()) {
+    thesaurusCache.delete(key);
+    return null;
+  }
+  // Refresh insertion order for basic LRU behavior
+  thesaurusCache.delete(key);
+  thesaurusCache.set(key, entry);
+  return entry.value;
+}
+
+function setThesaurusCache(key: string, value: unknown) {
+  if (thesaurusCache.size >= THESAURUS_CACHE_MAX) {
+    // delete oldest
+    const oldestKey = thesaurusCache.keys().next().value;
+    if (oldestKey) thesaurusCache.delete(oldestKey);
+  }
+  thesaurusCache.set(key, { value, expiresAt: Date.now() + THESAURUS_CACHE_TTL_MS });
+}
 
 export class UsernameGenerator {
-  private _name =
-    "projects/853416854561/secrets/MW_THESAURUS_API/versions/latest";
+  
 
   private _baseThesaurusUrl =
     "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
 
-  private client = new SecretManagerServiceClient();
-
   private apiKey = "";
+  private static badWordsSet: Set<string> = new Set(badWords.map(w => w.trim().toLowerCase()));
+  
 
-  get name() {
-    return this._name;
-  }
+  
 
   get baseThesaurusUrl() {
     return this._baseThesaurusUrl;
-  }
-
-  async getBadWords() {
-    const data: string[] = readFileSync(
-      path.join(__dirname, "bad-words.csv"),
-      "utf-8",
-    )
-      .split("\n")
-      .sort();
-    // console.debug(data);
-    return data;
   }
 
   generateUsernameHandler = async (req: Request, res: Response) => {
@@ -46,26 +81,26 @@ export class UsernameGenerator {
         throw new Error("Bad Request Body");
       }
 
-      let usernames: string[] = [];
-      const [apiKeyVersion] = await this.client.accessSecretVersion({
-        name: this.name,
-      });
+      // badWordsSet is now always available
 
-      this.apiKey = apiKeyVersion.payload!.data!.toString();
+      let usernames: string[] = [];
+
+  this.apiKey = await resolveThesaurusKey();
 
       const maxLength = req.query.maxlength ? Number(req.query.maxlength) : 20;
       let responseData: string[] = [];
 
       let processedWords: string[] = [];
 
-      if (req.body.words.length > 1) {
-        const words = req.body.words as string[];
+      const words: unknown[] = Array.isArray(req.body.words) ? req.body.words : [];
 
-        const badWords = await this.getBadWords();
-
-        processedWords = words.filter((word) => {
-          return !badWords.includes(word);
-        });
+      if (words.length > 0) {
+        processedWords = words
+          .map((w) => String(w || "")).filter(Boolean)
+          .filter((w) => {
+            const normalized = w.trim().toLowerCase();
+            return !UsernameGenerator.badWordsSet.has(normalized);
+          });
       }
       responseData = processedWords
         ? await this.getWordsFromResponse(processedWords)
@@ -76,7 +111,6 @@ export class UsernameGenerator {
       res
         .status(200)
         .send(usernames.filter((username) => username.length <= maxLength));
-      
     } catch (error) {
       console.error(`${error}: ${JSON.stringify(errors)}`);
       res.status(400).json(errors);
@@ -84,17 +118,29 @@ export class UsernameGenerator {
     }
   };
 
+  // No need for loadBadWords; badWordsSet is built at module load
+
   private async getWordsFromResponse(words: string[]) {
-    
     let responseData: string[] = [];
 
     for (const word of words as string[]) {
-
       const formattedWord = word.replace(/([^0-9a-zA-Z]+)/g, "");
+      const cacheKey = `${formattedWord.toLowerCase()}`;
+      const cached = getFromThesaurusCache(cacheKey);
+      if (cached) {
+        const data = cached as unknown;
+        if (this.isThesaurusResultModelV2Array(data)) {
+          responseData = await this.getWordsToUse(data as ThesaurusResultModelV2[]);
+        } else if (Array.isArray(data) && this.isStringArray(data)) {
+          responseData = await this.getWordsFromResponse(data as string[]);
+        }
+        continue;
+      }
 
       const mWThesaurus = `${this.baseThesaurusUrl}/${formattedWord}/?key=${this.apiKey}`;
       try {
         const synonyms = await axios.get(mWThesaurus);
+        setThesaurusCache(cacheKey, synonyms.data);
         if (this.isThesaurusResultModelV2Array(synonyms.data)) {
           responseData = await this.getWordsToUse(synonyms.data);
         } else {
@@ -107,22 +153,29 @@ export class UsernameGenerator {
     return responseData;
   }
 
-  isThesaurusResultModelV2 = (data: any): data is ThesaurusResultModelV2 => {
-    return (data as ThesaurusResultModelV2).meta !== undefined;
-  };
-
-  isThesaurusResultModelV2Array = (data: any) => {
-    return (data as ThesaurusResultModelV2[]).every(
-      (entry: ThesaurusResultModelV2) => entry.meta !== undefined,
+  isThesaurusResultModelV2 = (
+    data: unknown,
+  ): data is ThesaurusResultModelV2 => {
+    return (
+      typeof data === "object" && data !== null && "meta" in (data as object)
     );
   };
 
-  isStringArray = (arr: any[]) => {
+  isThesaurusResultModelV2Array = (
+    data: unknown,
+  ): data is ThesaurusResultModelV2[] => {
+    return (
+      Array.isArray(data) &&
+      (data as unknown[]).every((entry) => this.isThesaurusResultModelV2(entry))
+    );
+  };
+
+  isStringArray = (arr: unknown[]): arr is string[] => {
     return arr.every((i) => typeof i === "string");
   };
 
   private async getWordsToUse(data: ThesaurusResultModelV2[]) {
-    let resultsInFunction: any[] = [];
+    let resultsInFunction: string[] = [];
 
     for (const entry of data) {
       if (this.isThesaurusResultModelV2(entry)) {
@@ -141,7 +194,7 @@ export class UsernameGenerator {
     specialCharacters?: string[],
   ) {
     console.log(responseData);
-    let usernames: string[] = [];
+    const usernames: string[] = [];
     for (let i = 1; i < responseData.length; i++) {
       const responseIndexGenerator = () =>
         this.randomResponseDataIndex(i, responseData);
@@ -232,7 +285,7 @@ export class UsernameGenerator {
   }
 
   private capitalizeWord(word: string): string {
-    const trimRegex = /[\s'\(\)-]+/;
+    const trimRegex = /[\s'()-]+/;
     let result: string[] | string = word.trim().split(trimRegex);
     if (typeof result !== "string" && result.length > 1) {
       result = result.map((fragment: string) => {
