@@ -197,5 +197,5 @@ export const badWords: string[] = [
   "buggered",
   "buggery",
   "bukkake",
-  "bullcrap"
+  "bullcrap",
 ];

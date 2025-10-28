@@ -4,7 +4,7 @@ import { validationResult } from "express-validator";
 import { defaultWords } from "../constants/default-words";
 import { ThesaurusResultModelV2 } from "../models/thesaurus.model";
 import { badWords } from "../constants/bad-words";
-import { apiKey } from "..";
+import { info, error } from "firebase-functions/logger";
 
 let cachedThesaurusKey: string | null = null;
 
@@ -12,10 +12,17 @@ async function resolveThesaurusKey(): Promise<string> {
   if (cachedThesaurusKey) return cachedThesaurusKey;
   // Try runtime secret (defineSecret)
   try {
-    const val = apiKey.value();
-    if (val) {
-      cachedThesaurusKey = String(val);
-      return cachedThesaurusKey;
+    // dynamic import to avoid circular dependency with server/index
+    const mod = (await import("..")) as
+      | { apiKey?: { value?: () => unknown } }
+      | undefined;
+    const runtimeApiKey = mod?.apiKey ?? null;
+    if (runtimeApiKey && typeof runtimeApiKey.value === "function") {
+      const val = runtimeApiKey.value();
+      if (val) {
+        cachedThesaurusKey = String(val);
+        return cachedThesaurusKey;
+      }
     }
   } catch {
     // ignore and fall back to env
@@ -55,20 +62,20 @@ function setThesaurusCache(key: string, value: unknown) {
     const oldestKey = thesaurusCache.keys().next().value;
     if (oldestKey) thesaurusCache.delete(oldestKey);
   }
-  thesaurusCache.set(key, { value, expiresAt: Date.now() + THESAURUS_CACHE_TTL_MS });
+  thesaurusCache.set(key, {
+    value,
+    expiresAt: Date.now() + THESAURUS_CACHE_TTL_MS,
+  });
 }
 
 export class UsernameGenerator {
-  
-
   private _baseThesaurusUrl =
     "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
 
   private apiKey = "";
-  private static badWordsSet: Set<string> = new Set(badWords.map(w => w.trim().toLowerCase()));
-  
-
-  
+  private static badWordsSet: Set<string> = new Set(
+    badWords.map((w) => w.trim().toLowerCase()),
+  );
 
   get baseThesaurusUrl() {
     return this._baseThesaurusUrl;
@@ -85,18 +92,21 @@ export class UsernameGenerator {
 
       let usernames: string[] = [];
 
-  this.apiKey = await resolveThesaurusKey();
+      this.apiKey = await resolveThesaurusKey();
 
       const maxLength = req.query.maxlength ? Number(req.query.maxlength) : 20;
       let responseData: string[] = [];
 
       let processedWords: string[] = [];
 
-      const words: unknown[] = Array.isArray(req.body.words) ? req.body.words : [];
+      const words: unknown[] = Array.isArray(req.body.words)
+        ? req.body.words
+        : [];
 
       if (words.length > 0) {
         processedWords = words
-          .map((w) => String(w || "")).filter(Boolean)
+          .map((w) => String(w || ""))
+          .filter(Boolean)
           .filter((w) => {
             const normalized = w.trim().toLowerCase();
             return !UsernameGenerator.badWordsSet.has(normalized);
@@ -111,10 +121,10 @@ export class UsernameGenerator {
       res
         .status(200)
         .send(usernames.filter((username) => username.length <= maxLength));
-    } catch (error) {
-      console.error(`${error}: ${JSON.stringify(errors)}`);
+    } catch (err) {
+      error(`${err}: ${JSON.stringify(errors)}`);
       res.status(400).json(errors);
-      throw error;
+      throw err;
     }
   };
 
@@ -130,7 +140,9 @@ export class UsernameGenerator {
       if (cached) {
         const data = cached as unknown;
         if (this.isThesaurusResultModelV2Array(data)) {
-          responseData = await this.getWordsToUse(data as ThesaurusResultModelV2[]);
+          responseData = await this.getWordsToUse(
+            data as ThesaurusResultModelV2[],
+          );
         } else if (Array.isArray(data) && this.isStringArray(data)) {
           responseData = await this.getWordsFromResponse(data as string[]);
         }
@@ -193,7 +205,7 @@ export class UsernameGenerator {
     responseData: string[],
     specialCharacters?: string[],
   ) {
-    console.log(responseData);
+    info(responseData);
     const usernames: string[] = [];
     for (let i = 1; i < responseData.length; i++) {
       const responseIndexGenerator = () =>

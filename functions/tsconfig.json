@@ -11,8 +11,9 @@
     "esModuleInterop": true,
     "removeComments": true,
     "importHelpers": true,
-    "types": ["node"],
+  "types": ["node", "jest"],
     "skipLibCheck": true
   },
-  "compileOnSave": true
+  "compileOnSave": true,
+  "exclude": ["node_modules", "lib"]
 }
