@@ -1,3 +1,22 @@
+## [3.0.1](https://github.com/Zwiqler94/Username-Generator/compare/v2.0.1...v3.0.1) (2025-11-05)
+
+
+### Bug Fixes
+
+* potential fix for code scanning alert no. 8: Server-side request forgery ([2a60051](https://github.com/Zwiqler94/Username-Generator/commit/2a60051e38f24a71bef6f990dea169b412eb3e7b))
+* snyk ai fixes ([ce91e45](https://github.com/Zwiqler94/Username-Generator/commit/ce91e454b265c1e12c6d433b7cb925a4ad1fa783))
+* user-controlled bypass of security check ([065606f](https://github.com/Zwiqler94/Username-Generator/commit/065606f82de6bf4b5b9ffa6102ca46f4a0cd112d))
+
+
+### Features
+
+* enforce appcheck ([ca524f0](https://github.com/Zwiqler94/Username-Generator/commit/ca524f011f0621eef463979b3e083f39c4a0fec0))
+* enforce appcheck ([37408ed](https://github.com/Zwiqler94/Username-Generator/commit/37408ede39cda5a1384d6ae6689da4f05b3e519e))
+* snyk ai ([0a0447e](https://github.com/Zwiqler94/Username-Generator/commit/0a0447e739e70c85bf393fbc081caf6bf6649ab9))
+* v2 dev ([34273d9](https://github.com/Zwiqler94/Username-Generator/commit/34273d92e50269ec3b3cbfb8b5a9528439af3493))
+
+
+
 # [3.0.0](https://github.com/Zwiqler94/Username-Generator/compare/v2.0.1...v3.0.0) (2025-11-05)
 
 
