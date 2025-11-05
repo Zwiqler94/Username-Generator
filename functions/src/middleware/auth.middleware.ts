@@ -18,7 +18,7 @@ const tokenGenerator = async (
     res.status(201).json({ token: appToken.token });
   } catch (err) {
     error(err);
-    res.status(500).json(err);
+    res.status(500).json({ error: "Internal server error" });
     next(err);
   }
 };
