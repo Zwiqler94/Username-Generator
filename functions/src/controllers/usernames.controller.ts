@@ -136,11 +136,6 @@ export class UsernameGenerator {
 
     for (const word of words as string[]) {
       const formattedWord = word.replace(/([^0-9a-zA-Z]+)/g, "");
-      // SSRF mitigation: Only allow non-empty alphanumeric words of reasonable length
-      if (!/^[a-zA-Z0-9]+$/.test(formattedWord) || formattedWord.length < 2 || formattedWord.length > 30) {
-        // Optionally log, skip, or handle invalid words
-        continue;
-      }
       const cacheKey = `${formattedWord.toLowerCase()}`;
       const cached = getFromThesaurusCache(cacheKey);
       if (cached) {
