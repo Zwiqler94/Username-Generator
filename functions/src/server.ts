@@ -12,6 +12,7 @@ import { authRouter } from "./middleware/auth.middleware";
 // Create Express app for v4
 export const createApp = (): express.Express => {
   const app = express();
+  app.disable("x-powered-by");
 
   app.use(express.json());
   app.use(cors({ origin: true }));
