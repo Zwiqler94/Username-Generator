@@ -31,9 +31,9 @@ export const authGuard = async (
     const bearerToken = req.headers.authorization?.trim().split(" ");
 
     if (bearerToken) {
-      debug(bearerToken[1]);
-      const decodedToken = await getAuth().verifyIdToken(bearerToken[1]);
-      debug(`${decodedToken.uid}'s token verified!`);
+      // debug(bearerToken[1]);
+      await getAuth().verifyIdToken(bearerToken[1]);
+      debug(`Token verified!`);
       next();
     } else {
       return next(new Error("Missing Header"));
@@ -49,9 +49,9 @@ export const appCheckGaurd = async (
   res: Response,
   next: NextFunction,
 ) => {
-  debug(req);
+  // debug(req);
   const appCheckToken = req.header("X-Firebase-AppCheck");
-  debug(appCheckToken);
+  // debug(appCheckToken);
   // const appCheckDebugToken = req.header('X-Firebase-AppCheck');
   const tokenToCheck = appCheckToken; //? appCheckToken : appCheckDebugToken;
   if (!tokenToCheck) {
@@ -64,8 +64,8 @@ export const appCheckGaurd = async (
   try {
     // if (appCheckToken) {
 
-    const ressy = await getAppCheck().verifyToken(tokenToCheck);
-    debug(ressy);
+    await getAppCheck().verifyToken(tokenToCheck);
+    // debug(ressy);
     // } else {
     //    return next('');
     // }
