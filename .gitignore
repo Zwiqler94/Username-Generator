@@ -168,3 +168,5 @@ lib/
 # End of https://www.toptal.com/developers/gitignore/api/dotenv,visualstudiocode,node
 .DS_Store
 credentials
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md
