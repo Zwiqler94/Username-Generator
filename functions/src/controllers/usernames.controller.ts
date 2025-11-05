@@ -120,6 +120,7 @@ export class UsernameGenerator {
 
       res
         .status(200)
+        .contentType('text/plain')
         .send(usernames.filter((username) => username.length <= maxLength));
     } catch (err) {
       error(`${err}: ${JSON.stringify(errors)}`);
