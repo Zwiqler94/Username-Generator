@@ -1,21 +1,28 @@
 import { defineSecret } from "firebase-functions/params";
-import { app as api } from "../../src/server";
+import { createApp, createAppDev } from "./server";
 import { onRequest } from "firebase-functions/v2/https";
 
-// // Start writing functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+import { initializeApp } from "firebase-admin/app";
 
-const apiKey = defineSecret("MW_THESAURUS_API");
+// Initialize Firebase
+export const firebaseAdminApp = initializeApp();
+
+export const apiKey = defineSecret("MW_THESAURUS_API");
 
 export const usernameGeneratorAPIGen2 = onRequest(
   {
+    minInstances: 0,
     concurrency: 10,
     secrets: [apiKey],
   },
-  api,
+  createApp(),
+);
+
+export const usernameGeneratorAPIGen2Dev = onRequest(
+  {
+    minInstances: 0,
+    concurrency: 10,
+    secrets: [apiKey],
+  },
+  createAppDev(),
 );
