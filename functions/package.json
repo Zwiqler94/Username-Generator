@@ -4,7 +4,7 @@
     "test": "jest --passWithNoTests --runInBand",
     "test:watch": "jest --watch",
     "lint": "eslint --fix ./",
-    "build": "cp src/constants/bad-words.csv ./lib/src/constants/ && tsc",
+    "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "shell": "npm run build && firebase functions:shell",
@@ -13,15 +13,12 @@
     "logs": "firebase functions:log",
     "clean": "gts clean",
     "compile": "tsc",
-    "fix": "gts fix",
-    "prepare": "npm run compile",
-    "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "fix": "gts fix"
   },
   "engines": {
     "node": "22"
   },
-  "main": "lib/functions/src/index.js",
+  "main": "lib/index.js",
   "dependencies": {
     "@google-cloud/secret-manager": "^6.1.1",
     "axios": "^1.13.0",

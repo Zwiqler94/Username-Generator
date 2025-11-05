@@ -7,7 +7,7 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "ES2022",
+    "target": "esnext",
     "esModuleInterop": true,
     "removeComments": true,
     "importHelpers": true,

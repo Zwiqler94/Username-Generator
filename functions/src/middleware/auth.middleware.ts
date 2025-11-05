@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import { getAppCheck } from "firebase-admin/app-check";
-import { debug, error } from "firebase-functions/logger";
+import { error } from "firebase-functions/logger";
 import { authValidator } from "../validators/auth.validator";
 import { authGuard } from "./general.middleware";
 
@@ -11,7 +11,6 @@ const tokenGenerator = async (
   res: Response,
   next: NextFunction,
 ) => {
-  debug("meeep");
   try {
     const appToken = await getAppCheck().createToken(
       "1:853416854561:web:ce4ad92e0ba115925e8f60",

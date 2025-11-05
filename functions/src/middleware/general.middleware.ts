@@ -5,7 +5,7 @@ import {
   Response,
   NextFunction,
   ErrorRequestHandler,
-  Express,
+  Router,
 } from "express";
 import { debug, error } from "firebase-functions/logger";
 import rateLimit from "express-rate-limit";
@@ -49,12 +49,14 @@ export const appCheckGaurd = async (
   res: Response,
   next: NextFunction,
 ) => {
+  debug(req);
   const appCheckToken = req.header("X-Firebase-AppCheck");
+  debug(appCheckToken);
   // const appCheckDebugToken = req.header('X-Firebase-AppCheck');
   const tokenToCheck = appCheckToken; //? appCheckToken : appCheckDebugToken;
   if (!tokenToCheck) {
     res.status(401);
-    return next("Unauthorized Code: No Token");
+    return next(new Error("Unauthorized Code: No Token"));
   }
 
   // debug({ tokenToCheck });
@@ -62,8 +64,8 @@ export const appCheckGaurd = async (
   try {
     // if (appCheckToken) {
 
-    await getAppCheck().verifyToken(tokenToCheck);
-
+    const ressy = await getAppCheck().verifyToken(tokenToCheck);
+    debug(ressy);
     // } else {
     //    return next('');
     // }
@@ -73,7 +75,6 @@ export const appCheckGaurd = async (
     // }
     next();
   } catch (err: unknown) {
-    // error(err);
     res.status(401);
     let msg: string;
     if (err && typeof err === "object" && "message" in err) {
@@ -81,20 +82,16 @@ export const appCheckGaurd = async (
     } else {
       msg = String(err);
     }
-    return next(`Unauthorized Code: Error ${msg}`);
+    error(msg);
+    return next(new Error(`Unauthorized Code: Error ${msg}`));
   }
-  // next();
 };
-
-// allowList was removed because it was unused; keep here as a reference if needed in future
 
 export const limiter = rateLimit({
   max: 100,
   windowMs: 15 * 60 * 1000,
-  // Don't include invalid options; use booleans for headers config
   legacyHeaders: false,
   standardHeaders: true,
-  // skip: (req, res) => allowList.includes(req.ip as string),
 });
 
 export const validator = async (
@@ -115,7 +112,12 @@ export const errorHandler: ErrorRequestHandler = (
   err: Error,
   req: Request,
   res: Response,
+  next: NextFunction,
 ) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
   error(err.stack);
   res.status(res.statusCode !== 200 ? res.statusCode : 500).json({
     name: err.name,
@@ -140,28 +142,26 @@ const corsOpts: CorsOptions = {
   credentials: true,
 };
 
-export const setupMiddleware = (app: Express): void => {
+export const setupMiddleware = (): Router => {
+  const router = Router();
+
   // CORS
-  app.use(cors(corsOpts));
+  router.use(cors(corsOpts));
 
   // Security headers
-  app.use(helmet());
+  router.use(helmet());
 
   // Compression
-  app.use(compression());
-
-  // Trust Proxy (needed so rateLimit can see correct client IPs behind proxies)
-  app.set("trust proxy", 1);
+  router.use(compression());
 
   // Rate Limiting
-  app.use(limiter);
-
-  // Disable 'X-Powered-By' header
-  app.set("X-Powered-By", false);
+  router.use(limiter);
 
   // App Check Guard Middleware
-  app.use(appCheckGaurd);
+  router.use(appCheckGaurd);
 
   // Error Handler Middleware
-  app.use(errorHandler);
+  router.use(errorHandler);
+
+  return router;
 };

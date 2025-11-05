@@ -11,7 +11,7 @@ export const apiKey = defineSecret("MW_THESAURUS_API");
 
 export const usernameGeneratorAPIGen2 = onRequest(
   {
-    minInstances: 1,
+    minInstances: 0,
     concurrency: 10,
     secrets: [apiKey],
   },
@@ -20,7 +20,7 @@ export const usernameGeneratorAPIGen2 = onRequest(
 
 export const usernameGeneratorAPIGen2Dev = onRequest(
   {
-    minInstances: 1,
+    minInstances: 0,
     concurrency: 10,
     secrets: [apiKey],
   },
