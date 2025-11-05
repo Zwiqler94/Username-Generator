@@ -27,12 +27,15 @@ export const authGuard = async (
   res: Response,
   next: NextFunction,
 ) => {
-  try {
-    const bearerToken = req.headers.authorization?.trim().split(" ");
+  const { authorization } = req.headers;
+  const [scheme, token] = authorization
+    ? authorization.trim().split(" ")
+    : ["", ""];
 
-    if (bearerToken) {
+  try {
+    if (scheme === "Bearer" && token.trim().length > 1) {
       // debug(bearerToken[1]);
-      await getAuth().verifyIdToken(bearerToken[1]);
+      await getAuth().verifyIdToken(token);
       debug(`Token verified!`);
       next();
     } else {
