@@ -1,3 +1,21 @@
+# [3.0.0](https://github.com/Zwiqler94/Username-Generator/compare/v2.0.1...v3.0.0) (2025-11-05)
+
+
+### Bug Fixes
+
+* snyk ai fixes ([7f8a22a](https://github.com/Zwiqler94/Username-Generator/commit/7f8a22af19414b7a195436c6a6ed36bdfdc4d428))
+* user-controlled bypass of security check ([065606f](https://github.com/Zwiqler94/Username-Generator/commit/065606f82de6bf4b5b9ffa6102ca46f4a0cd112d))
+
+
+### Features
+
+* enforce appcheck ([ca524f0](https://github.com/Zwiqler94/Username-Generator/commit/ca524f011f0621eef463979b3e083f39c4a0fec0))
+* enforce appcheck ([37408ed](https://github.com/Zwiqler94/Username-Generator/commit/37408ede39cda5a1384d6ae6689da4f05b3e519e))
+* snyk ai ([0a0447e](https://github.com/Zwiqler94/Username-Generator/commit/0a0447e739e70c85bf393fbc081caf6bf6649ab9))
+* v2 dev ([34273d9](https://github.com/Zwiqler94/Username-Generator/commit/34273d92e50269ec3b3cbfb8b5a9528439af3493))
+
+
+
 ## <small>2.0.1 (2025-09-02)</small>
 
 * chore(release): 2.0.1 :tada: ([94a06ea](https://github.com/Zwiqler94/Username-Generator/commit/94a06ea))
