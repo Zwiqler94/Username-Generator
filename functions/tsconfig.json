@@ -1,19 +1,29 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "module": "commonjs",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
-    "target": "esnext",
+    "target": "es2024",
     "esModuleInterop": true,
     "removeComments": true,
     "importHelpers": true,
-  "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "skipLibCheck": true
   },
   "compileOnSave": true,
-  "exclude": ["node_modules", "lib"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
 }
