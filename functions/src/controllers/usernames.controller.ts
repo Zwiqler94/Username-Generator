@@ -13,7 +13,7 @@ async function resolveThesaurusKey(): Promise<string> {
   // Try runtime secret (defineSecret)
   try {
     // dynamic import to avoid circular dependency with server/index
-    const mod = (await import("..")) as
+    const mod = (await import("../index.js")) as
       | { apiKey?: { value?: () => unknown } }
       | undefined;
     const runtimeApiKey = mod?.apiKey ?? null;
