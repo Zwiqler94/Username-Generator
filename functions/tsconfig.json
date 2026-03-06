@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "module": "es2022",
+    "module": "commonjs",
     "moduleResolution": "node10",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
