@@ -13,7 +13,7 @@ async function resolveThesaurusKey(): Promise<string> {
   // Try runtime secret (defineSecret)
   try {
     // dynamic import to avoid circular dependency with server/index
-    const mod = (await import("..")) as
+    const mod = (await import("../index.js")) as
       | { apiKey?: { value?: () => unknown } }
       | undefined;
     const runtimeApiKey = mod?.apiKey ?? null;
@@ -120,7 +120,7 @@ export class UsernameGenerator {
 
       res
         .status(200)
-        .contentType('text/plain')
+        .contentType("text/plain")
         .send(usernames.filter((username) => username.length <= maxLength));
     } catch (err) {
       error(`${err}: ${JSON.stringify(errors)}`);
@@ -137,7 +137,11 @@ export class UsernameGenerator {
     for (const word of words as string[]) {
       const formattedWord = word.replace(/([^0-9a-zA-Z]+)/g, "");
       // SSRF mitigation: Only allow non-empty alphanumeric words of reasonable length
-      if (!/^[a-zA-Z0-9]+$/.test(formattedWord) || formattedWord.length < 2 || formattedWord.length > 30) {
+      if (
+        !/^[a-zA-Z0-9]+$/.test(formattedWord) ||
+        formattedWord.length < 2 ||
+        formattedWord.length > 30
+      ) {
         // Optionally log, skip, or handle invalid words
         continue;
       }

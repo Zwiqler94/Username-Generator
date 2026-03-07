@@ -36,7 +36,7 @@ export const authGuard = async (
     if (scheme === "Bearer" && token.trim().length > 1) {
       // debug(bearerToken[1]);
       await getAuth().verifyIdToken(token);
-      debug(`Token verified!`);
+      debug("Token verified!");
       next();
     } else {
       return next(new Error("Missing Header"));

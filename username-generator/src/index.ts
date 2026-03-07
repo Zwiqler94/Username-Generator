@@ -7,11 +7,12 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { setGlobalOptions } from "firebase-functions";
-import { onCall } from "firebase-functions/v2/https";
-import { getAppCheck } from "firebase-admin/app-check";
-import { debug, error } from "firebase-functions/logger";
-import { initializeApp } from "firebase-admin/app";
+import {setGlobalOptions} from "firebase-functions";
+import {onCall} from "firebase-functions/v2/https";
+import {getAppCheck} from "firebase-admin/app-check";
+import {debug, error} from "firebase-functions/logger";
+import {initializeApp} from "firebase-admin/app";
+
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -26,12 +27,12 @@ import { initializeApp } from "firebase-admin/app";
 // functions should each use functions.runWith({ maxInstances: 10 }) instead.
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({maxInstances: 10});
 
 initializeApp();
 
-export const unGenCallable = onCall({ enforceAppCheck: true }, async (req) => {
-  debug(req)
+export const unGenCallable = onCall({enforceAppCheck: true}, async (req) => {
+  debug(req);
   try {
     const appToken = await getAppCheck().createToken(
       "1:853416854561:web:ce4ad92e0ba115925e8f60"

@@ -1,3 +1,18 @@
+# [5.0.0](https://github.com/Zwiqler94/Username-Generator/compare/v4.0.0...v5.0.0) (2026-03-07)
+
+
+### Bug Fixes
+
+* change module type from es2022 to commonjs in tsconfig ([1b8b9cb](https://github.com/Zwiqler94/Username-Generator/commit/1b8b9cb412533677aa7afcef19a85e381da95350))
+# [4.0.0](https://github.com/Zwiqler94/Username-Generator/compare/v3.0.1...v4.0.0) (2026-03-06)
+
+
+### Bug Fixes
+
+* sonarqube setup ([b0a9be1](https://github.com/Zwiqler94/Username-Generator/commit/b0a9be10c62aafadb7cd71f95ac8cede2292156d))
+
+
+
 ## [3.0.1](https://github.com/Zwiqler94/Username-Generator/compare/v2.0.1...v3.0.1) (2025-11-05)
 
 
