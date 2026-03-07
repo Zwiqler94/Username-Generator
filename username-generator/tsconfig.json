@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "esnext",
+    "module": "nodenext",
     "esModuleInterop": true,
-    "moduleResolution": "node10",
+    "moduleResolution": "nodenext",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "outDir": "lib",

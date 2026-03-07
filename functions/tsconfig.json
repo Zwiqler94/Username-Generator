@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "module": "commonjs",
-    "moduleResolution": "node10",
+    "module": "nodenext",
+    "moduleResolution": "node16",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "outDir": "lib",

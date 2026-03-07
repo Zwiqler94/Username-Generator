@@ -1,42 +1,32 @@
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-import { fixupConfigRules } from "@eslint/compat";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+import tsParser from "@typescript-eslint/parser";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import globals from "globals";
 
 export default [
   {
     ignores: ["lib/**/*", "*.DS_Store"],
   },
-  ...fixupConfigRules(
-    compat.extends(
-      "eslint:recommended",
-      "./node_modules/gts",
-      "plugin:@typescript-eslint/recommended",
-    ),
-  ),
+  js.configs.recommended,
   {
+    files: ["**/*.ts"],
     languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
       globals: {
         ...globals.node,
+        ...globals.jest,
       },
-
-      parser: tsParser,
     },
-
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
     rules: {
+      ...tsPlugin.configs.recommended.rules,
       quotes: ["error", "double"],
-      "import/no-unresolved": 0,
     },
   },
 ];
