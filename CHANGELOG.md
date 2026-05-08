@@ -1,3 +1,9 @@
+# [5.1.0](https://github.com/Zwiqler94/Username-Generator/compare/v3.0.1...v5.1.0) (2026-05-08)
+
+
+### Bug Fixes
+
+* sonarqube setup ([#101](https://github.com/Zwiqler94/Username-Generator/issues/101)) ([10d6783](https://github.com/Zwiqler94/Username-Generator/commit/10d678317cd921f5472559560565dfffa672e118))
 # [5.0.0](https://github.com/Zwiqler94/Username-Generator/compare/v4.0.0...v5.0.0) (2026-03-07)
 
 
