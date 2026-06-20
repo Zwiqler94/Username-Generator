@@ -1,6 +1,28 @@
 import { UsernameGenerator } from "../usernames.controller";
 
 describe("UsernameGenerator", () => {
+  test("normalizeSpecialCharacters keeps safe fragments and drops unsafe values", () => {
+    const gen = new UsernameGenerator();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fn = (gen as any)["normalizeSpecialCharacters"].bind(gen);
+    const specials = fn([
+      "_",
+      "!",
+      "42",
+      " user-name ",
+      "<script>",
+      "\"",
+      "/",
+      "",
+      "   ",
+      1,
+      null,
+    ]) as string[];
+
+    expect(specials).toEqual(["_", "!", "42", "user-name"]);
+  });
+
   test("generateUsernames produces unique usernames and respects max length filter indirectly", () => {
     const gen = new UsernameGenerator();
     // small dataset to make deterministic-ish outputs
