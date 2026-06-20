@@ -116,12 +116,14 @@ export class UsernameGenerator {
         ? await this.getWordsFromResponse(processedWords)
         : await this.getWordsFromResponse(defaultWords);
 
-      usernames = this.generateUsernames(responseData, req.body.specials);
+      usernames = this.generateUsernames(
+        responseData,
+        this.normalizeSpecialCharacters(req.body.specials),
+      );
 
-      res
-        .status(200)
-        .contentType("text/plain")
-        .send(usernames.filter((username) => username.length <= maxLength));
+      res.status(200).json(
+        usernames.filter((username) => username.length <= maxLength),
+      );
     } catch (err) {
       error(`${err}: ${JSON.stringify(errors)}`);
       res.status(400).json(errors);
@@ -130,6 +132,19 @@ export class UsernameGenerator {
   };
 
   // No need for loadBadWords; badWordsSet is built at module load
+
+  private normalizeSpecialCharacters(specialCharacters: unknown): string[] {
+    if (!Array.isArray(specialCharacters)) return [];
+
+    return specialCharacters
+      .filter((specialCharacter): specialCharacter is string => {
+        return typeof specialCharacter === "string";
+      })
+      .map((specialCharacter) => specialCharacter.trim())
+      .filter((specialCharacter) => {
+        return /^[A-Za-z0-9_.!@#$-]+$/.test(specialCharacter);
+      });
+  }
 
   private async getWordsFromResponse(words: string[]) {
     let responseData: string[] = [];
