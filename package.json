@@ -1,6 +1,6 @@
 {
   "name": "username-generator",
-  "version": "5.1.2",
+  "version": "5.1.3",
   "description": "a tool to generate usernames",
   "main": "index.ts",
   "scripts": {
