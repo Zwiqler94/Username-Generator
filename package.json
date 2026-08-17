@@ -15,7 +15,7 @@
   "author": "Jacob Zwickler",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/secret-manager": "^6.2.0",
+    "@google-cloud/secret-manager": "^7.0.0",
     "axios": "^1.18.0",
     "compression": "^1.8.1",
     "conventional-changelog-cli": "^5.0.0",
