@@ -34,12 +34,12 @@ export const authGuard = async (
 
   try {
     if (scheme === "Bearer" && token.trim().length > 1) {
-      // debug(bearerToken[1]);
       await getAuth().verifyIdToken(token);
       debug("Token verified!");
       next();
     } else {
-      return next(new Error("Missing Header"));
+      res.status(401);
+      return next(new Error("Unauthorized"));
     }
   } catch (err) {
     res.status(401);
@@ -52,41 +52,21 @@ export const appCheckGaurd = async (
   res: Response,
   next: NextFunction,
 ) => {
-  // debug(req);
   const appCheckToken = req.header("X-Firebase-AppCheck");
-  // debug(appCheckToken);
-  // const appCheckDebugToken = req.header('X-Firebase-AppCheck');
-  const tokenToCheck = appCheckToken; //? appCheckToken : appCheckDebugToken;
+  const tokenToCheck = appCheckToken;
   if (!tokenToCheck) {
     res.status(401);
-    return next(new Error("Unauthorized Code: No Token"));
+    return next(new Error("Unauthorized"));
   }
-
-  // debug({ tokenToCheck });
-
   try {
-    // if (appCheckToken) {
-
     await getAppCheck().verifyToken(tokenToCheck);
-    // debug(ressy);
-    // } else {
-    //    return next('');
-    // }
-
-    // if (appCheckDebugToken && !appCheckToken) {
-    //   debug('DEBUG TOKEN USED');
-    // }
     next();
   } catch (err: unknown) {
     res.status(401);
-    let msg: string;
-    if (err && typeof err === "object" && "message" in err) {
-      msg = (err as { message?: unknown }).message as string;
-    } else {
-      msg = String(err);
-    }
-    error(msg);
-    return next(new Error(`Unauthorized Code: Error ${msg}`));
+    error("app_check_verification_failed", {
+      error: err instanceof Error ? err.name : "UnknownError",
+    });
+    return next(new Error("Unauthorized"));
   }
 };
 
@@ -121,12 +101,17 @@ export const errorHandler: ErrorRequestHandler = (
     return next(err);
   }
 
-  error(err.stack);
-  res.status(res.statusCode !== 200 ? res.statusCode : 500).json({
-    name: err.name,
-    code: res.statusCode,
-    description: err.message ? err.message : err,
-    stack: err.stack,
+  const status = res.statusCode !== 200 ? res.statusCode : 500;
+  error("request_failed", { code: status, name: err.name });
+  res.status(status).json({
+    name: status === 401 ? "UnauthorizedError" : err.name,
+    code: status,
+    description:
+      status === 401
+        ? "Unauthorized"
+        : status >= 500
+          ? "Internal Server Error"
+          : err.message || "Request failed",
   });
 };
 
