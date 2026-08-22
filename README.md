@@ -6,7 +6,7 @@ An App Check-protected Firebase Functions API that turns short prompts into them
 
 | Path | Purpose |
 | ---- | ------- |
-| `functions/` | Cloud Functions v2 HTTP API (Express) that exposes `POST /api/v4/usernames` and the authenticated `GET /auth/token` helper. |
+| `functions/` | Cloud Functions v2 HTTP API (Express) that exposes `POST /api/v4/usernames` and the authenticated `GET /api/v4/auth/token` helper. |
 | `username-generator/` | Secondary Cloud Functions v2 codebase that hosts the callable `unGenCallable` helper. Clients call it to mint Firebase App Check tokens before hitting the API. |
 | `firebase.json` | Declares both codebases and their build hooks. Deploying with `firebase deploy --only functions` publishes every function listed here. |
 | `credentials/`, `public/` | Local-only assets or hosting stubs that are ignored by deploys. |
@@ -93,9 +93,9 @@ Generates up to ~300 deterministic handles by blending Merriam-Webster synonyms,
 
 - **Headers**
   - `Content-Type: application/json`
-  - `X-Firebase-AppCheck: <token>` - required. Issued by `unGenCallable` or `/auth/token`.
+  - `X-Firebase-AppCheck: <token>` - required. Issued by `unGenCallable` or another Firebase App Check client integration.
 - **Query params**
-  - `maxlength` (optional): truncate any usernames longer than this value (default `20`).
+  - `maxlength` (optional): truncate any usernames longer than this value (default `20`, allowed range `1`–`50`).
 - **Body**
 
   ```json
@@ -105,7 +105,7 @@ Generates up to ~300 deterministic handles by blending Merriam-Webster synonyms,
   }
   ```
 
-  `words` must be a non-empty array. `specials` is optional; pass an empty array or omit it entirely to skip symbols/numbers.
+  `words` must be a non-empty array of at most 20 strings, each 2–30 characters. `specials` is optional and accepts at most 10 allowlisted fragments, each no longer than 12 characters; pass an empty array or omit it entirely to skip symbols/numbers.
 - **Responses**
   - `200 OK` with a JSON array (`string[]`) of unique usernames, e.g.:
 
@@ -122,17 +122,19 @@ Generates up to ~300 deterministic handles by blending Merriam-Webster synonyms,
 
 Internally, the handler caches up to 1,000 thesaurus lookups for one hour, filters profanity via `badWords`, rate-limits to 100 requests per IP per 15 minutes, and sends Helmet/CORS headers by default.
 
-### `GET /auth/token`
+### `GET /api/v4/auth/token`
 
-Issues a short-lived Firebase App Check token for the Everything App web app.
+Refreshes a short-lived Firebase App Check token for an already-attested Everything App user.
 
 - **Headers**
   - `Authorization: Bearer <Firebase ID token>` - verified via `getAuth().verifyIdToken`. Obtain this token the same way you would for any Firebase-authenticated user session.
+  - `X-Firebase-AppCheck: <token>` - required by the shared API middleware.
 - **Responses**
   - `201 Created` with `{ "token": "<AppCheck token>" }`.
   - `401 Unauthorized` when the bearer token is missing/invalid.
 
-This endpoint is available both on the deployed host and in the emulator at `/auth/token`. Because it doubles as an authenticated utility route, it is mounted under `/api/v4/auth/token` inside the main Express router.
+This endpoint is available on the deployed host and in the emulator at `/api/v4/auth/token`. It is mounted behind the shared App Check and rate-limit middleware.
+Use `unGenCallable` or the Firebase App Check client integration for initial attestation.
 
 ### Callable: `unGenCallable`
 
@@ -160,7 +162,7 @@ export const unGenCallable = onCall({ enforceAppCheck: true }, async () => {
 ## Security model
 
 - **App Check everywhere**: Both the callable and the HTTP API require App Check tokens before fulfilling requests.
-- **Firebase Auth guard**: `/auth/token` verifies the caller's Firebase ID token.
+- **Firebase Auth guard**: `/api/v4/auth/token` verifies the caller's Firebase ID token.
 - **Rate limiting**: `express-rate-limit` caps bursts at 100 requests per 15-minute window per IP.
 - **Helmet + CORS**: standard security headers and CORS configuration are applied by `setupMiddleware`.
 - **Profanity filter**: all prompt words are normalized and vetted against `badWords`, and default safe words fill any gaps.

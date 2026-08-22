@@ -5,6 +5,12 @@ import { defaultWords } from "../constants/default-words";
 import { ThesaurusResultModelV2 } from "../models/thesaurus.model";
 import { badWords } from "../constants/bad-words";
 import { info, error } from "firebase-functions/logger";
+import {
+  MAX_SPECIAL_LENGTH,
+  MAX_SPECIALS,
+  MAX_WORD_LENGTH,
+  MAX_WORDS,
+} from "../validators/username-req.validator";
 
 let cachedThesaurusKey: string | null = null;
 
@@ -41,6 +47,21 @@ async function resolveThesaurusKey(): Promise<string> {
 type CacheEntry = { value: unknown; expiresAt: number };
 const THESAURUS_CACHE_MAX = 1000;
 const THESAURUS_CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+const MAX_LOOKUPS = 25;
+const MAX_RECURSION_DEPTH = 3;
+const MAX_RESPONSE_RESULTS = 500;
+const MAX_GENERATED_USERNAMES = 500;
+const MAX_USERNAME_LENGTH = 50;
+const THESAURUS_TIMEOUT_MS = 5000;
+const THESAURUS_MAX_RESPONSE_BYTES = 64 * 1024;
+const SAFE_THESAURUS_ERROR_CODES = new Set([
+  "ECONNABORTED",
+  "ETIMEDOUT",
+  "ERR_BAD_REQUEST",
+  "ERR_BAD_RESPONSE",
+  "ERR_CANCELED",
+  "ERR_NETWORK",
+]);
 const thesaurusCache = new Map<string, CacheEntry>();
 
 function getFromThesaurusCache(key: string): unknown | null {
@@ -94,25 +115,40 @@ export class UsernameGenerator {
 
       this.apiKey = await resolveThesaurusKey();
 
-      const maxLength = req.query.maxlength ? Number(req.query.maxlength) : 20;
+      const requestedMaxLength = req.query.maxlength
+        ? Number(req.query.maxlength)
+        : 20;
+      if (
+        !Number.isInteger(requestedMaxLength) ||
+        requestedMaxLength < 1 ||
+        requestedMaxLength > MAX_USERNAME_LENGTH
+      ) {
+        throw new Error("Invalid maxlength");
+      }
+      const maxLength = requestedMaxLength;
       let responseData: string[] = [];
 
       let processedWords: string[] = [];
 
       const words: unknown[] = Array.isArray(req.body.words)
-        ? req.body.words
+        ? req.body.words.slice(0, MAX_WORDS)
         : [];
 
       if (words.length > 0) {
-        processedWords = words
-          .map((w) => String(w || ""))
-          .filter(Boolean)
-          .filter((w) => {
-            const normalized = w.trim().toLowerCase();
-            return !UsernameGenerator.badWordsSet.has(normalized);
-          });
+        processedWords = Array.from(
+          new Set(
+            words
+              .filter((word): word is string => typeof word === "string")
+              .map((word) => word.trim().slice(0, MAX_WORD_LENGTH))
+              .filter(Boolean)
+              .filter((word) => {
+                const normalized = word.toLowerCase();
+                return !UsernameGenerator.badWordsSet.has(normalized);
+              }),
+          ),
+        );
       }
-      responseData = processedWords
+      responseData = processedWords.length > 0
         ? await this.getWordsFromResponse(processedWords)
         : await this.getWordsFromResponse(defaultWords);
 
@@ -122,7 +158,9 @@ export class UsernameGenerator {
       );
 
       res.status(200).json(
-        usernames.filter((username) => username.length <= maxLength),
+        usernames
+          .filter((username) => username.length <= maxLength)
+          .slice(0, MAX_GENERATED_USERNAMES),
       );
     } catch (err) {
       error(`${err}: ${JSON.stringify(errors)}`);
@@ -136,20 +174,41 @@ export class UsernameGenerator {
   private normalizeSpecialCharacters(specialCharacters: unknown): string[] {
     if (!Array.isArray(specialCharacters)) return [];
 
-    return specialCharacters
-      .filter((specialCharacter): specialCharacter is string => {
-        return typeof specialCharacter === "string";
-      })
-      .map((specialCharacter) => specialCharacter.trim())
-      .filter((specialCharacter) => {
-        return /^[A-Za-z0-9_.!@#$-]+$/.test(specialCharacter);
-      });
+    return Array.from(
+      new Set(
+        specialCharacters
+          .filter((specialCharacter): specialCharacter is string => {
+            return typeof specialCharacter === "string";
+          })
+          .map((specialCharacter) => specialCharacter.trim())
+          .filter((specialCharacter) => {
+            return (
+              specialCharacter.length <= MAX_SPECIAL_LENGTH &&
+              /^[A-Za-z0-9_.!@#$-]+$/.test(specialCharacter)
+            );
+          }),
+      ),
+    ).slice(0, MAX_SPECIALS);
   }
 
-  private async getWordsFromResponse(words: string[]) {
+  private async getWordsFromResponse(
+    words: string[],
+    depth = 0,
+    budget = { lookups: 0 },
+  ) {
     let responseData: string[] = [];
 
-    for (const word of words as string[]) {
+    if (depth > MAX_RECURSION_DEPTH || budget.lookups >= MAX_LOOKUPS) {
+      return responseData;
+    }
+
+    for (const word of words) {
+      if (
+        budget.lookups >= MAX_LOOKUPS ||
+        responseData.length >= MAX_RESPONSE_RESULTS
+      ) {
+        break;
+      }
       const formattedWord = word.replace(/([^0-9a-zA-Z]+)/g, "");
       // SSRF mitigation: Only allow non-empty alphanumeric words of reasonable length
       if (
@@ -169,22 +228,59 @@ export class UsernameGenerator {
             data as ThesaurusResultModelV2[],
           );
         } else if (Array.isArray(data) && this.isStringArray(data)) {
-          responseData = await this.getWordsFromResponse(data as string[]);
+          responseData = await this.getWordsFromResponse(
+            data,
+            depth + 1,
+            budget,
+          );
         }
+        responseData = responseData.slice(0, MAX_RESPONSE_RESULTS);
         continue;
       }
 
+      budget.lookups += 1;
       const mWThesaurus = `${this.baseThesaurusUrl}/${formattedWord}/?key=${this.apiKey}`;
       try {
-        const synonyms = await axios.get(mWThesaurus);
+        const synonyms = await axios.get(mWThesaurus, {
+          timeout: THESAURUS_TIMEOUT_MS,
+          maxContentLength: THESAURUS_MAX_RESPONSE_BYTES,
+          maxBodyLength: THESAURUS_MAX_RESPONSE_BYTES,
+        });
         setThesaurusCache(cacheKey, synonyms.data);
         if (this.isThesaurusResultModelV2Array(synonyms.data)) {
           responseData = await this.getWordsToUse(synonyms.data);
-        } else {
-          responseData = await this.getWordsFromResponse(synonyms.data);
+        } else if (
+          Array.isArray(synonyms.data) &&
+          this.isStringArray(synonyms.data)
+        ) {
+          responseData = await this.getWordsFromResponse(
+            synonyms.data,
+            depth + 1,
+            budget,
+          );
         }
-      } catch (error) {
-        console.error(error);
+        responseData = responseData.slice(0, MAX_RESPONSE_RESULTS);
+      } catch (err) {
+        const isAxiosError = axios.isAxiosError(err);
+        const responseStatus = isAxiosError ? err.response?.status : undefined;
+        const status =
+          typeof responseStatus === "number" &&
+          Number.isInteger(responseStatus) &&
+          responseStatus >= 100 &&
+          responseStatus <= 599
+            ? responseStatus
+            : "unknown";
+        const code =
+          isAxiosError &&
+          typeof err.code === "string" &&
+          SAFE_THESAURUS_ERROR_CODES.has(err.code)
+            ? err.code
+            : "UNKNOWN";
+        error("thesaurus_request_failed", {
+          provider: "merriam-webster",
+          status,
+          code,
+        });
       }
     }
     return responseData;
@@ -215,11 +311,13 @@ export class UsernameGenerator {
     let resultsInFunction: string[] = [];
 
     for (const entry of data) {
+      if (resultsInFunction.length >= MAX_RESPONSE_RESULTS) break;
       if (this.isThesaurusResultModelV2(entry)) {
         resultsInFunction = resultsInFunction.concat(entry.meta.stems);
         resultsInFunction = resultsInFunction.concat(
           (entry.meta.syns as string[][]).flat(3),
         );
+        resultsInFunction = resultsInFunction.slice(0, MAX_RESPONSE_RESULTS);
       }
     }
 
@@ -233,13 +331,15 @@ export class UsernameGenerator {
     info(responseData);
     const usernames: string[] = [];
     for (let i = 1; i < responseData.length; i++) {
+      if (usernames.length >= MAX_GENERATED_USERNAMES) break;
       const responseIndexGenerator = () =>
         this.randomResponseDataIndex(i, responseData);
       const responseDefaultIndexGenerator = () => this.randomDefaultIndex();
       const randomNumberGenerator = (arrLength?: number) =>
         this.randomIndex(arrLength);
 
-      for (let i = 0; i < 15; i++) {
+      for (let attempt = 0; attempt < 15; attempt++) {
+        if (usernames.length >= MAX_GENERATED_USERNAMES) break;
         usernames.push(
           this.createUsername(
             responseData,

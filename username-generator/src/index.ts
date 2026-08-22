@@ -10,7 +10,7 @@
 import {setGlobalOptions} from "firebase-functions";
 import {onCall} from "firebase-functions/v2/https";
 import {getAppCheck} from "firebase-admin/app-check";
-import {debug, error} from "firebase-functions/logger";
+import {error} from "firebase-functions/logger";
 import {initializeApp} from "firebase-admin/app";
 
 
@@ -32,14 +32,15 @@ setGlobalOptions({maxInstances: 10});
 initializeApp();
 
 export const unGenCallable = onCall({enforceAppCheck: true}, async (req) => {
-  debug(req);
   try {
     const appToken = await getAppCheck().createToken(
       "1:853416854561:web:ce4ad92e0ba115925e8f60"
     );
     return appToken;
   } catch (err) {
-    error(err);
+    error("app_check_token_mint_failed", {
+      error: err instanceof Error ? err.name : "UnknownError",
+    });
     return;
   }
 });

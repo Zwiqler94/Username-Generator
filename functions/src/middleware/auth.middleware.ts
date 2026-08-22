@@ -16,8 +16,10 @@ const tokenGenerator = async (
       "1:853416854561:web:ce4ad92e0ba115925e8f60",
     );
     res.status(201).json({ token: appToken.token });
-  } catch (err) {
-    error(err);
+  } catch (err: unknown) {
+    error("app_check_token_mint_failed", {
+      error: err instanceof Error ? err.name : "UnknownError",
+    });
     res.status(500).json({ error: "Internal server error" });
     next(err);
   }

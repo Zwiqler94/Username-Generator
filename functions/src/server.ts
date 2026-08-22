@@ -16,8 +16,6 @@ export const createApp = (): express.Express => {
 
   app.use(express.json());
   app.use(cors({ origin: true }));
-  // Mount auth routes on the exported app so the emulator-exposed app includes /auth
-  app.use("/auth", authRouter);
 
   // Trust Proxy (needed so rateLimit can see correct client IPs behind proxies)
   app.set("trust proxy", 1);
@@ -25,7 +23,7 @@ export const createApp = (): express.Express => {
   app.set("X-Powered-By", false);
 
   const middlewareRouter = setupMiddleware(); // Apply shared middleware
-  // Mount auth routes under /auth so /auth/token is reachable
+  // Mount auth routes behind the shared App Check and rate-limit middleware.
   middlewareRouter.use("/auth", authRouter);
   // Attach username generator route at runtime to avoid module-load side effects
   const usernameGenerator = new UsernameGenerator();
@@ -47,8 +45,6 @@ export const createAppDev = (): express.Express => {
 
   app.use(express.json());
   app.use(cors({ origin: true }));
-  // Mount auth routes on the exported app so the emulator-exposed app includes /auth
-  app.use("/auth", authRouter);
 
   // Trust Proxy (needed so rateLimit can see correct client IPs behind proxies)
   app.set("trust proxy", 1);
@@ -56,7 +52,7 @@ export const createAppDev = (): express.Express => {
   app.set("X-Powered-By", false);
 
   const middlewareRouter = setupMiddleware(); // Apply shared middleware
-  // Mount auth routes under /auth so /auth/token is reachable
+  // Mount auth routes behind the shared App Check and rate-limit middleware.
   middlewareRouter.use("/auth", authRouter);
   // Attach username generator route at runtime to avoid module-load side effects
   const usernameGenerator = new UsernameGenerator();
