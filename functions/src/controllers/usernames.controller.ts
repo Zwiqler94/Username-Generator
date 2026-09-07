@@ -183,8 +183,22 @@ export class UsernameGenerator {
         } else {
           responseData = await this.getWordsFromResponse(synonyms.data);
         }
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        const responseStatus = axios.isAxiosError(err)
+          ? err.response?.status
+          : undefined;
+        const status =
+          typeof responseStatus === "number" &&
+          Number.isInteger(responseStatus) &&
+          responseStatus >= 100 &&
+          responseStatus <= 599
+            ? responseStatus
+            : "unknown";
+        error("thesaurus_lookup_failed", {
+          provider: "merriam-webster",
+          status,
+          code: "UPSTREAM_REQUEST_FAILED",
+        });
       }
     }
     return responseData;
